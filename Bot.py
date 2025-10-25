@@ -31,7 +31,7 @@ async def on_ready():
         open('message_log.txt', 'w').close()
     if not os.path.exists('banned_words.txt'):
         open('banned_words.txt', 'w').close()
-    with open('banned_words.txt', 'rb') as file:
+    with open('banned_words.txt', 'r') as file:
         for word in file.read().splitlines():
             banned_words.append(word)
     print(f"Bot is ready. Logged in as {client.user} (ID: {client.user.id})")
