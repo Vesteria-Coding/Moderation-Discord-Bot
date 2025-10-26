@@ -1,6 +1,6 @@
 import os
-import discord
 import asyncio
+import discord
 import requests
 import time as t
 import aiofiles as asyncfile
@@ -9,10 +9,11 @@ from discord import app_commands, Interaction, Embed
 
 # Setup Credentials
 load_dotenv()
+MOD_API = os.getenv("MOD_API")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GUILD_ID = int(os.getenv("GUILD_ID"))
 PASTEBIN_KEY = os.getenv("PASTEBIN_KEY")
-MOD_API = os.getenv("MOD_API")
+MOD_ROLE_ID = int(os.getenv('MOD_ROLE_ID'))
 
 # Setup
 intents = discord.Intents.all()
@@ -33,7 +34,8 @@ async def on_ready():
         open('banned_words.txt', 'w').close()
     with open('banned_words.txt', 'r') as file:
         for word in file.read().splitlines():
-            banned_words.append(word)
+            if word:
+                banned_words.append(word)
     print(f"Bot is ready. Logged in as {client.user} (ID: {client.user.id})")
     await tree.sync(guild=discord.Object(id=GUILD_ID))
 
@@ -62,5 +64,16 @@ async def on_message(message):
 async def ping(interaction: discord.Interaction):
     latency = client.latency * 1000  # Convert to ms
     await interaction.response.send_message(f'Pong! `{latency:.2f}ms`', ephemeral=True)
+
+@tree.command(name="add_banned_word", description="Adds a banned word to the word list", guild=discord.Object(id=GUILD_ID))
+async def add(interaction: discord.Interaction, word: str):
+    await interaction.response.defer(thinking=True)
+    if MOD_ROLE_ID not in [r.id for r in interaction.user.roles]:
+        await interaction.followup.send("You don't have permission to use this command.", ephemeral=True)
+        return
+    async with asyncfile.open('banned_words.txt', 'a') as file:
+        await file.write(f'{word.lower()}\n')
+        banned_words.append(word.lower())
+    await interaction.followup.send(f'Added word **{word.lower()}** to the banned word list.', ephemeral=True)
 
 client.run(BOT_TOKEN)
