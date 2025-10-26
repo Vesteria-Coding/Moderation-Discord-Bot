@@ -56,8 +56,10 @@ async def on_message(message):
         embed.add_field(name=f'Message sent by: {author}', value=create_pastebin(message.content, PASTEBIN_KEY), inline=False)
         await message.channel.send(embed=embed)
     if any(bad_word in message.content.lower() for bad_word in banned_words) or profanity.contains_profanity(message.content.lower()):
-        await message.reply("That word isn’t allowed here.", mention_author=True)
+        bot_reply = await message.reply("That word isn’t allowed here.", mention_author=True)
         await message.delete()
+        await asyncio.sleep(10)
+        await bot_reply.delete()
         return
 
 # Commands
