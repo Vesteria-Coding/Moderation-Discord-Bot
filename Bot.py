@@ -5,6 +5,7 @@ import requests
 import time as t
 import aiofiles as asyncfile
 from dotenv import load_dotenv
+from better_profanity import profanity
 from discord import app_commands, Interaction, Embed
 
 # Setup Credentials
@@ -54,7 +55,7 @@ async def on_message(message):
         embed = discord.Embed(title='Big Message Deleted', color=discord.Color.dark_gold())
         embed.add_field(name=f'Message sent by: {author}', value=create_pastebin(message.content, PASTEBIN_KEY), inline=False)
         await message.channel.send(embed=embed)
-    if any(bad_word in message.content.lower() for bad_word in banned_words):
+    if any(bad_word in message.content.lower() for bad_word in banned_words) or profanity.contains_profanity(message.content.lower()):
         await message.reply("That word isn’t allowed here.", mention_author=True)
         await message.delete()
         return
