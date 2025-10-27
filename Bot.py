@@ -2,7 +2,6 @@ import os
 import asyncio
 import discord
 import requests
-import time as t
 import aiofiles as asyncfile
 from dotenv import load_dotenv
 from better_profanity import profanity
@@ -32,6 +31,8 @@ async def on_ready():
         open('message_log.txt', 'w').close()
     if not os.path.exists('banned_words.txt'):
         open('banned_words.txt', 'w').close()
+    if not os.path.exists('config.ini'):
+        open('config.ini', 'w').close()
     with open('banned_words.txt', 'r') as file:
         for word in file.read().splitlines():
             if word:
@@ -59,6 +60,14 @@ async def on_message(message):
         await message.delete()
         await asyncio.sleep(10)
         await bot_reply.delete()
+        return
+
+@client.event
+async def on_member_join(member):
+    if any(bad_word in member.display_name.lower() for bad_word in banned_words) or profanity.contains_profanity(member.display_name.lower()):
+        await member.send('You were kicked for having Profanity and/or slurs in your username. Please change your username before atempting to join again.')
+        await asyncio.sleep(0.5)
+        await member.kick(reason='Profanity and/or slurs in username.')
         return
 
 # Commands
