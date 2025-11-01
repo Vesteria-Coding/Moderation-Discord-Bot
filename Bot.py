@@ -4,15 +4,20 @@ import discord
 import requests
 import aiofiles as asyncfile
 from dotenv import load_dotenv
+from configparser import ConfigParser
 from better_profanity import profanity
 from discord import app_commands, Interaction, Embed
 
 # Setup Credentials
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-GUILD_ID = int(os.getenv("GUILD_ID"))
 PASTEBIN_KEY = os.getenv("PASTEBIN_KEY")
-MOD_ROLE_ID = int(os.getenv('MOD_ROLE_ID'))
+
+# Config
+config = ConfigParser()
+config.read('config.ini')
+GUILD_ID = int(config['DATABASE']['guild_ID'])
+MOD_ROLE_ID = int(config['DATABASE']['mod_role_ID'])
 
 # Setup
 intents = discord.Intents.all()
