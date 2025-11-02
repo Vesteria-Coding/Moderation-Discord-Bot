@@ -1,4 +1,5 @@
 import os
+import zipfile
 import asyncio
 import discord
 import requests
@@ -18,6 +19,7 @@ config = ConfigParser()
 config.read('config.ini')
 GUILD_ID = int(config['DATABASE']['guild_ID'])
 MOD_ROLE_ID = int(config['DATABASE']['mod_role_ID'])
+MAX_FILE_SIZE = int(config['DATABASE']['max_file_size'])
 
 # Setup
 intents = discord.Intents.all()
@@ -51,6 +53,8 @@ async def on_message(message):
         return
     async with asyncfile.open('message_log.txt', 'a') as log:
         await log.write(f'Message From: {message.author}, {message.author.id} | {message.content} \n')
+        if MAX_FILE_SIZE < os.path.getsize("message_log.txt"):
+            print('file is too big')
     if len(message.content) > 1000:
         await message.delete()
         if message.author.nick:
@@ -91,5 +95,17 @@ async def add(interaction: discord.Interaction, word: str):
         await file.write(f'{word.lower()}\n')
         banned_words.append(word.lower())
     await interaction.followup.send(f'Added word **{word.lower()}** to the banned word list.', ephemeral=True)
+
+@tree.command(name="send_log", description="Sends the message log", guild=discord.Object(id=GUILD_ID))
+async def send_log(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
+    if MOD_ROLE_ID not in [r.id for r in interaction.user.roles]:
+        await interaction.followup.send("You don't have permission to use this command.", ephemeral=True)
+        return
+    try:
+        await interaction.user.send(f"Here is the message log:", file=discord.File('message_log.txt'))
+        await interaction.followup.send("I've sent you the updated log in DMs!", ephemeral=True)
+    except discord.Forbidden:
+        await interaction.followup.send("I couldn’t DM you. Please check your privacy settings.", ephemeral=True)
 
 client.run(BOT_TOKEN)
